@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Eye, Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
+import { bootstrapQueryKey } from "@/features/app/hooks/use-bootstrap";
 import { ApiError } from "@/lib/api/http-client";
-import { getAuthToken, getCompanySlug } from "@/features/auth/utils/auth-response";
+import { getAuthToken } from "@/features/auth/utils/auth-response";
+import { saveAccessToken } from "@/features/auth/utils/token-storage";
 import { login, signup } from "@/features/auth/api/auth-api";
+import { OnboardingModal } from "@/features/onboarding/components/onboarding-modal";
+import type { OnboardingState } from "@/features/onboarding/types/onboarding";
 import type { AuthPageContent } from "@/features/auth/types/auth-page";
 
 type AuthCardProps = {
@@ -20,10 +25,12 @@ type NotificationState = {
 
 export function AuthCard({ content }: AuthCardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isSignup = content.mode === "signup";
   const [notification, setNotification] = useState<NotificationState>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,23 +42,36 @@ export function AuthCard({ content }: AuthCardProps) {
     const password = String(formData.get("password") ?? "");
     const name = String(formData.get("name") ?? "").trim();
     const organizationName = String(formData.get("organizationName") ?? "").trim();
+    const organizationSlug = String(formData.get("organizationSlug") ?? "").trim();
 
     try {
-      validateAuthForm({ email, isSignup, name, organizationName, password });
+      validateAuthForm({ email, isSignup, name, organizationName, organizationSlug, password });
 
       const response = isSignup
-        ? await signup({ email, name, organizationName, password })
+        ? await signup({ email, name, organizationName, organizationSlug, password })
         : await login({ email, password });
-      console.log("Auth response:", response);
+
       const token = getAuthToken(response);
-      const companySlug = getCompanySlug(response, organizationName);
 
       if (token) {
-        localStorage.setItem("buildtruth_admin_token", token);
+        saveAccessToken(token);
       }
 
-      if (!companySlug) {
-        throw new Error("Login succeeded, but the company slug was missing from the response.");
+      queryClient.setQueryData(bootstrapQueryKey, {
+        onboarding: response.onboarding,
+        organization: response.organization,
+        user: response.user,
+      });
+
+      if (!response.onboarding.completed) {
+        setNotification({
+          message: isSignup
+            ? "Account created. You can finish setup now or skip to the dashboard."
+            : "Signed in. You can finish setup now or skip to the dashboard.",
+          type: "success",
+        });
+        setOnboarding(response.onboarding);
+        return;
       }
 
       setNotification({
@@ -59,9 +79,8 @@ export function AuthCard({ content }: AuthCardProps) {
         type: "success",
       });
 
-      router.push(`/${companySlug}/dashboard/overview`);
+      router.push(response.onboarding.redirectTo || "/dashboard");
     } catch (error) {
-      console.error("Authentication error:", error);
       setNotification({
         message: getSubmitErrorMessage(error),
         type: "error",
@@ -72,19 +91,20 @@ export function AuthCard({ content }: AuthCardProps) {
   }
 
   return (
-    <section className="w-full rounded-2xl border border-[#202b42] bg-[#111827] px-8 py-9 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:px-9 sm:py-10">
-      <div className="mb-8">
-        <h1 className="max-w-[330px] text-[28px] font-bold leading-[1.18] tracking-normal text-[#f4f7fb] sm:text-[30px]">
-          {content.title}
-        </h1>
-        <p className="mt-3 max-w-[330px] text-[15px] leading-6 text-[#9ca3af]">
-          {content.description}
-        </p>
-      </div>
+    <>
+      <section className="w-full rounded-2xl border border-[#202b42] bg-[#111827] px-8 py-9 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:px-9 sm:py-10">
+        <div className="mb-8">
+          <h1 className="max-w-[330px] text-[28px] font-bold leading-[1.18] tracking-normal text-[#f4f7fb] sm:text-[30px]">
+            {content.title}
+          </h1>
+          <p className="mt-3 max-w-[330px] text-[15px] leading-6 text-[#9ca3af]">
+            {content.description}
+          </p>
+        </div>
 
-      {notification ? <AuthNotification notification={notification} /> : null}
+        {notification ? <AuthNotification notification={notification} /> : null}
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
         {isSignup ? (
           <>
             <label className="block">
@@ -107,6 +127,18 @@ export function AuthCard({ content }: AuthCardProps) {
                 className="h-[43px] w-full rounded-xl border border-[#243047] bg-[#172033] px-3.5 text-[15px] text-[#f8fafc] outline-none transition placeholder:text-[#8d96a6] focus:border-[#4f82f6] focus:ring-4 focus:ring-[#4f82f6]/15"
                 name="organizationName"
                 placeholder="Acme Construction"
+                type="text"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2.5 block text-[15px] font-medium text-[#f1f5f9]">
+                Organization slug
+              </span>
+              <input
+                className="h-[43px] w-full rounded-xl border border-[#243047] bg-[#172033] px-3.5 text-[15px] text-[#f8fafc] outline-none transition placeholder:text-[#8d96a6] focus:border-[#4f82f6] focus:ring-4 focus:ring-[#4f82f6]/15"
+                name="organizationSlug"
+                placeholder="acme"
                 type="text"
               />
             </label>
@@ -161,15 +193,26 @@ export function AuthCard({ content }: AuthCardProps) {
             content.submitLabel
           )}
         </button>
-      </form>
+        </form>
 
-      <p className="mt-7 text-center text-[15px] text-[#9ca3af]">
-        {content.footerText}{" "}
-        <Link className="font-medium text-[#5f8dff] hover:text-[#82a8ff]" href={content.footerHref}>
-          {content.footerAction}
-        </Link>
-      </p>
-    </section>
+        <p className="mt-7 text-center text-[15px] text-[#9ca3af]">
+          {content.footerText}{" "}
+          <Link className="font-medium text-[#5f8dff] hover:text-[#82a8ff]" href={content.footerHref}>
+            {content.footerAction}
+          </Link>
+        </p>
+      </section>
+      {onboarding ? (
+        <OnboardingModal
+          onboarding={onboarding}
+          onClose={() => {
+            setOnboarding(null);
+            router.push("/dashboard");
+          }}
+          onComplete={() => router.push("/dashboard")}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -197,6 +240,7 @@ function validateAuthForm(input: {
   isSignup: boolean;
   name: string;
   organizationName: string;
+  organizationSlug: string;
   password: string;
 }) {
   if (!input.email) {
@@ -217,6 +261,10 @@ function validateAuthForm(input: {
 
   if (!input.organizationName) {
     throw new Error("Please enter your organization name.");
+  }
+
+  if (!input.organizationSlug) {
+    throw new Error("Please enter your organization slug.");
   }
 }
 

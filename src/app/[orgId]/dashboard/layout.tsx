@@ -3,12 +3,16 @@ import { DashboardShell } from "@/features/dashboard/components/dashboard-shell"
 type DashboardLayoutProps = {
   children: React.ReactNode;
   params: Promise<{
-    companySlug: string;
+    orgId: string;
   }>;
 };
 
 export default async function DashboardLayout({ children, params }: DashboardLayoutProps) {
-  const { companySlug } = await params;
+  const { orgId } = await params;
 
-  return <DashboardShell companySlug={companySlug}>{children}</DashboardShell>;
+  return (
+    <DashboardShell basePath={`/${orgId}/dashboard`} workspaceLabel={orgId}>
+      {children}
+    </DashboardShell>
+  );
 }

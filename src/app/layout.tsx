@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { QueryProvider } from "@/features/app/providers/query-provider";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -14,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

@@ -9,7 +9,7 @@ const statTone = {
   rose: "border-[#572536] bg-[#111827] text-[#ff7d95]",
 };
 
-export function OverviewDashboard() {
+export function OverviewDashboard({ setupReminder }: { setupReminder?: React.ReactNode }) {
   return (
     <main className="min-w-0">
       <DashboardPageHeader
@@ -19,6 +19,7 @@ export function OverviewDashboard() {
 
       <div className="grid gap-6 px-5 py-8 sm:px-8 lg:px-10 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="min-w-0 space-y-6">
+          {setupReminder}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {overviewStats.map((stat) => (
               <article

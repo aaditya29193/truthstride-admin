@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 
 type DashboardPageProps = {
   params: Promise<{
-    companySlug: string;
+    orgId: string;
   }>;
 };
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
-  const { companySlug } = await params;
+  const { orgId } = await params;
 
-  redirect(`/${companySlug}/dashboard/overview`);
+  redirect(`/${orgId}/dashboard/overview`);
 }

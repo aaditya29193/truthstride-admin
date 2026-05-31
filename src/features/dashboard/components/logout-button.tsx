@@ -2,12 +2,13 @@
 
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { clearAccessToken } from "@/features/auth/utils/token-storage";
 
 export function LogoutButton() {
   const router = useRouter();
 
   function handleLogout() {
-    localStorage.removeItem("buildtruth_admin_token");
+    clearAccessToken();
     router.replace("/login");
   }
 

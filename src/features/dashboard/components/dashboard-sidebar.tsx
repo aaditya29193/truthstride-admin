@@ -7,7 +7,8 @@ import { DashboardBrand } from "@/features/dashboard/components/dashboard-brand"
 import { LogoutButton } from "@/features/dashboard/components/logout-button";
 
 type DashboardSidebarProps = {
-  companySlug: string;
+  basePath?: string;
+  workspaceLabel: string;
 };
 
 const navItems = [
@@ -33,9 +34,8 @@ const navItems = [
   },
 ];
 
-export function DashboardSidebar({ companySlug }: DashboardSidebarProps) {
+export function DashboardSidebar({ basePath = "/dashboard", workspaceLabel }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const basePath = `/${companySlug}/dashboard`;
 
   return (
     <aside className="flex min-h-screen w-full flex-col border-r border-[#202a3f] bg-[#0b1018] lg:sticky lg:top-0 lg:w-60">
@@ -73,7 +73,7 @@ export function DashboardSidebar({ companySlug }: DashboardSidebarProps) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-[#f8fafc]">Admin User</p>
-            <p className="truncate text-xs text-[#9ca3af]">{companySlug}</p>
+            <p className="truncate text-xs text-[#9ca3af]">{workspaceLabel}</p>
           </div>
           <LogoutButton />
         </div>
