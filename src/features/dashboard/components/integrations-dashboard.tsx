@@ -1,17 +1,11 @@
 "use client";
 
-import { MessageSquare, Plug } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { DashboardPageHeader } from "@/features/dashboard/components/dashboard-page-header";
 import { GithubAppCard } from "@/features/integrations/github-app/components/github-app-card";
+import { JiraCard } from "@/features/integrations/jira/components/jira-card";
 
 const staticIntegrations = [
-  {
-    action: "Connect",
-    description: "Sync ticket statuses and link them to Git activity.",
-    icon: Plug,
-    state: "available",
-    title: "Jira",
-  },
   {
     action: "Coming soon",
     description: "Surface alerts and team chatter alongside Git events.",
@@ -31,6 +25,7 @@ export function IntegrationsDashboard() {
 
       <section className="grid gap-5 px-5 py-8 sm:px-8 lg:px-10 xl:grid-cols-3">
         <GithubAppCard />
+        <JiraCard />
 
         {staticIntegrations.map((integration) => {
           const Icon = integration.icon;
