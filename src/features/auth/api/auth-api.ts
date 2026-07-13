@@ -23,7 +23,6 @@ export type AuthResponse = {
   accessToken: string;
   expiresAt?: string;
   onboarding: OnboardingState;
-  token?: string;
   user?: {
     id: string;
     email: string;
@@ -36,20 +35,6 @@ export type AuthResponse = {
     orgId: string;
     slug: string;
   };
-  company?: {
-    id?: string;
-    name?: string;
-    orgId?: string;
-    slug?: string;
-  };
-  tenant?: {
-    id?: string;
-    name?: string;
-    orgId?: string;
-    slug?: string;
-  };
-  orgId?: string;
-  slug?: string;
 };
 
 export function login(payload: LoginPayload) {

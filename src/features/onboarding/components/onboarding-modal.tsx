@@ -5,11 +5,11 @@ import { ArrowRight, CheckCircle2, GitBranch, Loader2, TicketCheck, X } from "lu
 import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
 import { bootstrapQueryKey } from "@/features/app/hooks/use-bootstrap";
+import { getBootstrap } from "@/features/app/api/bootstrap-api";
 import {
   connectOnboardingGithub,
   connectOnboardingJira,
   createOnboardingProject,
-  getOnboardingBootstrap,
 } from "@/features/onboarding/api/onboarding-api";
 import type { OnboardingState } from "@/features/onboarding/types/onboarding";
 
@@ -48,45 +48,27 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
 
   const projectMutation = useMutation({
     mutationFn: createOnboardingProject,
-    onSuccess: async () => {
-      const response = await getOnboardingBootstrap();
-      queryClient.setQueryData(bootstrapQueryKey, response);
-      setMutationOnboarding(response.onboarding);
-      await queryClient.invalidateQueries({ queryKey: bootstrapQueryKey });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard", "setup-status"] });
-      handlePossibleCompletion(response.onboarding);
-    },
+    onSuccess: refreshOnboardingState,
   });
 
   const jiraMutation = useMutation({
     mutationFn: connectOnboardingJira,
-    onSuccess: async (response) => {
-      queryClient.setQueryData(bootstrapQueryKey, (current: unknown) =>
-        current && typeof current === "object"
-          ? { ...(current as Record<string, unknown>), onboarding: response.onboarding }
-          : current,
-      );
-      setMutationOnboarding(response.onboarding);
-      await queryClient.invalidateQueries({ queryKey: bootstrapQueryKey });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard", "setup-status"] });
-      handlePossibleCompletion(response.onboarding);
-    },
+    onSuccess: refreshOnboardingState,
   });
 
   const githubMutation = useMutation({
     mutationFn: connectOnboardingGithub,
-    onSuccess: async (response) => {
-      queryClient.setQueryData(bootstrapQueryKey, (current: unknown) =>
-        current && typeof current === "object"
-          ? { ...(current as Record<string, unknown>), onboarding: response.onboarding }
-          : current,
-      );
-      setMutationOnboarding(response.onboarding);
-      await queryClient.invalidateQueries({ queryKey: bootstrapQueryKey });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard", "setup-status"] });
-      handlePossibleCompletion(response.onboarding);
-    },
+    onSuccess: refreshOnboardingState,
   });
+
+  async function refreshOnboardingState() {
+    const response = await getBootstrap();
+    queryClient.setQueryData(bootstrapQueryKey, response);
+    setMutationOnboarding(response.onboarding);
+    await queryClient.invalidateQueries({ queryKey: bootstrapQueryKey });
+    await queryClient.invalidateQueries({ queryKey: ["dashboard", "setup-status"] });
+    handlePossibleCompletion(response.onboarding);
+  }
 
   const isPending = projectMutation.isPending || jiraMutation.isPending || githubMutation.isPending;
 
@@ -143,7 +125,7 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
     }
 
     githubMutation.mutate(
-      { personalAccessToken },
+      { accessToken: personalAccessToken },
       { onError: (caught) => setError(getErrorMessage(caught)) },
     );
   }

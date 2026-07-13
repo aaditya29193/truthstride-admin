@@ -1,7 +1,5 @@
 import { apiRequest } from "@/lib/api/http-client";
-import type { BootstrapResponse } from "@/features/onboarding/types/onboarding";
 import { getStoredAccessToken } from "@/features/auth/utils/token-storage";
-import { connect } from "http2";
 
 export type CreateProjectPayload = {
   description: string;
@@ -15,7 +13,18 @@ export type ConnectJiraPayload = {
 };
 
 export type ConnectGithubPayload = {
-  personalAccessToken: string;
+  accessToken: string;
+};
+
+export type IntegrationConnectionResponse = {
+  id: string;
+  organizationId: string;
+  tool: string;
+  name: string | null;
+  isActive: boolean;
+  details: Record<string, string | null>;
+  createdAt: string;
+  updatedAt: string;
 };
 
 const onboardingEndpoints = {
@@ -32,7 +41,7 @@ export function createOnboardingProject(payload: CreateProjectPayload) {
   });
 }
 
-export function connectOnboardingJira(payload: ConnectJiraPayload): Promise<BootstrapResponse>  {
+export function connectOnboardingJira(payload: ConnectJiraPayload): Promise<IntegrationConnectionResponse> {
   return apiRequest(onboardingEndpoints.connectJira, {
     body: payload,
     headers: getAuthorizedHeaders(),
@@ -40,18 +49,11 @@ export function connectOnboardingJira(payload: ConnectJiraPayload): Promise<Boot
   });
 }
 
-export function connectOnboardingGithub(payload: ConnectGithubPayload): Promise<BootstrapResponse>  {
+export function connectOnboardingGithub(payload: ConnectGithubPayload): Promise<IntegrationConnectionResponse> {
   return apiRequest(onboardingEndpoints.connectGithub, {
     body: payload,
     headers: getAuthorizedHeaders(),
     method: "POST",
-  });
-}
-
-export function getOnboardingBootstrap() {
-  return apiRequest<BootstrapResponse>("/api/v1/app/bootstrap", {
-    headers: getAuthorizedHeaders(),
-    method: "GET",
   });
 }
 
