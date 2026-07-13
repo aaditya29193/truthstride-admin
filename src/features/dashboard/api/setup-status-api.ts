@@ -11,7 +11,7 @@ export type SetupStatusResponse = {
 export function getSetupStatus() {
   const accessToken = getStoredAccessToken();
 
-  return apiRequest<SetupStatusResponse>("/api/v1/dashboard/setup-status", {
+  return apiRequest<SetupStatusResponse>("/dashboard/setup-status", {
     headers: accessToken
       ? {
           Authorization: `Bearer ${accessToken}`,

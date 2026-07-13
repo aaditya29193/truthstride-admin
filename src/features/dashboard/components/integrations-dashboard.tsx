@@ -1,14 +1,10 @@
-import { GitBranch, MessageSquare, Plug } from "lucide-react";
-import { DashboardPageHeader } from "@/features/dashboard/components/dashboard-page-header";
+"use client";
 
-const integrations = [
-  {
-    action: "Connected",
-    description: "Stream branches, PRs, and merges into BuildTruth.",
-    icon: GitBranch,
-    state: "connected",
-    title: "GitHub",
-  },
+import { MessageSquare, Plug } from "lucide-react";
+import { DashboardPageHeader } from "@/features/dashboard/components/dashboard-page-header";
+import { GithubAppCard } from "@/features/integrations/github-app/components/github-app-card";
+
+const staticIntegrations = [
   {
     action: "Connect",
     description: "Sync ticket statuses and link them to Git activity.",
@@ -34,7 +30,9 @@ export function IntegrationsDashboard() {
       />
 
       <section className="grid gap-5 px-5 py-8 sm:px-8 lg:px-10 xl:grid-cols-3">
-        {integrations.map((integration) => {
+        <GithubAppCard />
+
+        {staticIntegrations.map((integration) => {
           const Icon = integration.icon;
 
           return (
@@ -56,11 +54,9 @@ export function IntegrationsDashboard() {
 
               <button
                 className={`mt-6 h-10 rounded-xl px-4 text-sm font-medium transition ${
-                  integration.state === "connected"
-                    ? "border border-[#235a42] bg-[#10251d] text-[#9ee5be]"
-                    : integration.state === "soon"
-                      ? "cursor-not-allowed border border-[#3b465a] bg-[#182031] text-[#9ca3af]"
-                      : "bg-[#4f82f6] text-white hover:bg-[#416fe1]"
+                  integration.state === "soon"
+                    ? "cursor-not-allowed border border-[#3b465a] bg-[#182031] text-[#9ca3af]"
+                    : "bg-[#4f82f6] text-white hover:bg-[#416fe1]"
                 }`}
                 disabled={integration.state === "soon"}
                 type="button"

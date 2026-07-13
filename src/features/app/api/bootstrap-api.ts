@@ -5,7 +5,7 @@ import type { BootstrapResponse } from "@/features/onboarding/types/onboarding";
 export function getBootstrap() {
   const accessToken = getStoredAccessToken();
 
-  return apiRequest<BootstrapResponse>("/api/v1/app/bootstrap", {
+  return apiRequest<BootstrapResponse>("/app/bootstrap", {
     headers: accessToken
       ? {
           Authorization: `Bearer ${accessToken}`,
