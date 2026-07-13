@@ -52,7 +52,7 @@ export function GithubAppCard() {
           <button
             className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#263149] bg-[#172033] px-4 text-sm font-medium text-[#cbd5e1] transition hover:bg-[#1c2740] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={connect.isPending}
-            onClick={() => connect.mutate()}
+            onClick={() => connect.mutate(undefined)}
             type="button"
           >
             {connect.isPending ? <Loader2 aria-hidden className="animate-spin" size={16} /> : null}
@@ -79,7 +79,7 @@ export function GithubAppCard() {
             ))}
           </div>
         ) : (
-          <EmptyState isAdmin={isAdmin} isPending={connect.isPending} onConnect={() => connect.mutate()} />
+          <EmptyState isAdmin={isAdmin} isPending={connect.isPending} onConnect={() => connect.mutate(undefined)} />
         )}
       </div>
     </article>

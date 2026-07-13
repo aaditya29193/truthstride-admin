@@ -6,8 +6,8 @@ import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
 import { bootstrapQueryKey } from "@/features/app/hooks/use-bootstrap";
 import { getBootstrap } from "@/features/app/api/bootstrap-api";
+import { useGithubAppConnect } from "@/features/integrations/github-app/hooks/use-github-app-actions";
 import {
-  connectOnboardingGithub,
   connectOnboardingJira,
   createOnboardingProject,
 } from "@/features/onboarding/api/onboarding-api";
@@ -56,10 +56,7 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
     onSuccess: refreshOnboardingState,
   });
 
-  const githubMutation = useMutation({
-    mutationFn: connectOnboardingGithub,
-    onSuccess: refreshOnboardingState,
-  });
+  const githubConnect = useGithubAppConnect();
 
   async function refreshOnboardingState() {
     const response = await getBootstrap();
@@ -70,7 +67,7 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
     handlePossibleCompletion(response.onboarding);
   }
 
-  const isPending = projectMutation.isPending || jiraMutation.isPending || githubMutation.isPending;
+  const isPending = projectMutation.isPending || jiraMutation.isPending;
 
   function handlePossibleCompletion(nextOnboarding: OnboardingState) {
     if (nextOnboarding.completed) {
@@ -113,21 +110,11 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
     );
   }
 
-  async function handleGithubSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleGithubConnect() {
     setError("");
-    const formData = new FormData(event.currentTarget);
-    const personalAccessToken = String(formData.get("personalAccessToken") ?? "").trim();
-
-    if (!personalAccessToken) {
-      setError("GitHub personal access token is required.");
-      return;
-    }
-
-    githubMutation.mutate(
-      { accessToken: personalAccessToken },
-      { onError: (caught) => setError(getErrorMessage(caught)) },
-    );
+    githubConnect.mutate("/dashboard", {
+      onError: (caught) => setError(getErrorMessage(caught)),
+    });
   }
 
   return (
@@ -168,7 +155,11 @@ export function OnboardingModal({ onboarding, onClose, onComplete }: OnboardingM
             ) : null}
 
             {isCurrentStep(activeOnboarding.currentStep, "github") ? (
-              <GithubStep isPending={isPending} onSubmit={handleGithubSubmit} onSkip={onClose} />
+              <GithubStep
+                isPending={githubConnect.isPending}
+                onConnect={handleGithubConnect}
+                onSkip={onClose}
+              />
             ) : null}
 
             {!isKnownStep(activeOnboarding.currentStep) ? (
@@ -278,28 +269,40 @@ function JiraStep({
 
 function GithubStep({
   isPending,
+  onConnect,
   onSkip,
-  onSubmit,
 }: {
   isPending: boolean;
+  onConnect: () => void;
   onSkip: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <div className="space-y-4">
       <StepIntro
-        description="Connect GitHub so TruthStride can track branches, pull requests, reviews, and merges."
+        description="Connect GitHub so TruthStride can track branches, pull requests, reviews, and merges. This opens GitHub to install the TruthStride App on the repositories you choose."
         icon={<GitBranch aria-hidden size={22} />}
         title="Connect GitHub"
       />
-      <TextField
-        label="GitHub Personal Access Token"
-        name="personalAccessToken"
-        placeholder="Paste GitHub token"
-        type="password"
-      />
-      <StepActions isPending={isPending} primaryLabel="Connect" onSkip={onSkip} />
-    </form>
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+        <button
+          className="h-10 rounded-xl border border-[#263149] px-4 text-sm font-medium text-[#cbd5e1] transition hover:bg-[#172033]"
+          onClick={onSkip}
+          type="button"
+        >
+          Skip
+        </button>
+        <button
+          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#4f82f6] px-4 text-sm font-medium text-white transition hover:bg-[#416fe1] disabled:cursor-not-allowed disabled:bg-[#3b5fa9] disabled:text-white/70"
+          disabled={isPending}
+          onClick={onConnect}
+          type="button"
+        >
+          {isPending ? <Loader2 aria-hidden className="animate-spin" size={17} /> : null}
+          Connect via GitHub
+          {!isPending ? <ArrowRight aria-hidden size={17} /> : null}
+        </button>
+      </div>
+    </div>
   );
 }
 

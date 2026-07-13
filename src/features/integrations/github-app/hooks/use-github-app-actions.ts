@@ -7,8 +7,8 @@ import { githubAppInstallationsQueryKey } from "@/features/integrations/github-a
 
 export function useGithubAppConnect() {
   return useMutation({
-    mutationFn: async () => {
-      const { installUrl } = await getGithubAppInstallUrl();
+    mutationFn: async (returnTo?: string) => {
+      const { installUrl } = await getGithubAppInstallUrl(returnTo);
 
       window.location.href = installUrl;
     },

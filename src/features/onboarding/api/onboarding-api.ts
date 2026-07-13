@@ -12,10 +12,6 @@ export type ConnectJiraPayload = {
   jiraUrl: string;
 };
 
-export type ConnectGithubPayload = {
-  accessToken: string;
-};
-
 export type IntegrationConnectionResponse = {
   id: string;
   organizationId: string;
@@ -30,7 +26,6 @@ export type IntegrationConnectionResponse = {
 const onboardingEndpoints = {
   createProject: "/projects",
   connectJira: "/integrations/jira",
-  connectGithub: "/integrations/github",
 };
 
 export function createOnboardingProject(payload: CreateProjectPayload) {
@@ -43,14 +38,6 @@ export function createOnboardingProject(payload: CreateProjectPayload) {
 
 export function connectOnboardingJira(payload: ConnectJiraPayload): Promise<IntegrationConnectionResponse> {
   return apiRequest(onboardingEndpoints.connectJira, {
-    body: payload,
-    headers: getAuthorizedHeaders(),
-    method: "POST",
-  });
-}
-
-export function connectOnboardingGithub(payload: ConnectGithubPayload): Promise<IntegrationConnectionResponse> {
-  return apiRequest(onboardingEndpoints.connectGithub, {
     body: payload,
     headers: getAuthorizedHeaders(),
     method: "POST",

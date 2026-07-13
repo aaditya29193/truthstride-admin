@@ -6,8 +6,12 @@ import type {
   GithubAppInstallationRepository,
 } from "@/features/integrations/github-app/types/github-app";
 
-export function getGithubAppInstallUrl() {
-  return apiRequest<GithubAppInstallUrlResponse>("/github-app/install-url", {
+export function getGithubAppInstallUrl(returnTo?: string) {
+  const path = returnTo
+    ? `/github-app/install-url?returnTo=${encodeURIComponent(returnTo)}`
+    : "/github-app/install-url";
+
+  return apiRequest<GithubAppInstallUrlResponse>(path, {
     headers: getAuthorizedHeaders(),
     method: "GET",
   });
