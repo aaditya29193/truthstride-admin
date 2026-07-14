@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, LayoutDashboard, Plug, Settings } from "lucide-react";
+import { BarChart3, Boxes, LayoutDashboard, Plug, Settings } from "lucide-react";
 import { DashboardBrand } from "@/features/dashboard/components/dashboard-brand";
 import { LogoutButton } from "@/features/dashboard/components/logout-button";
 
@@ -26,6 +26,11 @@ const navItems = [
     href: "integrations",
     icon: Plug,
     label: "Integrations",
+  },
+  {
+    href: "analytics",
+    icon: BarChart3,
+    label: "Analytics",
   },
   {
     href: "settings",
